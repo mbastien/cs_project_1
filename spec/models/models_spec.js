@@ -2,6 +2,8 @@
 var models = require("../../models/models");
 var Person = models.Person;
 var Thing = models.Thing;
+var Place = models.Place;
+
 var db = require("../../config/db");
 describe("models", function() {
   var ids = {};
@@ -14,13 +16,19 @@ describe("models", function() {
         curly,
         rock,
         paper,
-        scissors) {
+        scissors,
+        newyork,
+        paris,
+        london) {
         ids.moeId = moe._id;
         ids.larryId = larry._id;
         ids.curlyId = curly._id;
         ids.rockId = rock._id;
         ids.paperId = paper._id;
         ids.scissorsId = scissors._id;
+        ids.newyorkId = newyork._id;
+        ids.parisId = paris._id;
+        ids.londonId = london._id;
         done();
       });
     });
@@ -32,6 +40,149 @@ describe("models", function() {
   });
 
   describe("Person", function() {
+    // place tests
+    // step 1 : Moe Favorites New York and Paris and Larry Favorites New York
+    describe("Moe Favorites New York and Paris and Larry Favorites New York", function(cb){
+      var favoritePlaces;
+      var unFavoritePlaces;
+      var peopleWhoLikeNY;
+      var peopleWhoLikeLondon;
+      var moe;
+      // var errMsg;
+      
+      var addFavoritePlaces = function(cb){
+        Person.addPlace(ids.moeId, ids.newyorkId, function(){
+          Person.addPlace(ids.moeId, ids.parisId, function(){
+            Person.addPlace(ids.larryId, ids.newyorkId, function(){
+              cb();
+            });
+          });
+        });
+      };
+      beforeEach(function(done){
+        addFavoritePlaces(function(){
+          Place.getAllFavoritedPlaces(function(err, _favoritePlaces){
+            favoritePlaces = _favoritePlaces;
+            Place.getAllUnfavoritedPlaces(function(err, _unFavoritePlaces){
+              unFavoritePlaces = _unFavoritePlaces;
+              Person.findAllWhoFavoritedPlace(ids.newyorkId, function(err, _peopleWhoLikeNY){
+                peopleWhoLikeNY = _peopleWhoLikeNY;
+                Person.findAllWhoFavoritedPlace(ids.londonId, function(err, _peopleWhoLikeLondon){
+                  peopleWhoLikeLondon = _peopleWhoLikeLondon;
+                  Person.getOneByName("Moe", function(err, _moe){
+                    moe = _moe;
+                    done();
+                  });
+                });
+              });
+            });
+          });
+        });
+      });// end of beforeEach
+      it("Favorite Places Should Have two items", function(){
+        expect(favoritePlaces.length).toEqual(2);
+      });
+      it("Favorite Places Should equal [New York, Paris]", function(){
+        var myFavs = favoritePlaces.map(function(place){return place.name});
+        expect(myFavs).toEqual(["New York", "Paris"]);
+      });
+      it("UnFavorite Places Should equal [London]", function(){
+        var myUnFavs = unFavoritePlaces.map(function(place){return place.name});
+        expect(myUnFavs).toEqual(["London"]);
+      });
+      it("People Who Like NY Should equal [Larry, Moe]", function(){
+        var iLoveNy = peopleWhoLikeNY.map(function(person){return person.name});
+        expect(iLoveNy).toEqual(["Larry", "Moe"]);
+      });
+      it("People Who Like London Should be empty", function(){
+        expect(peopleWhoLikeLondon).toEqual([]);
+      });
+      it("Moe has 2 favorite places", function(){
+        expect(moe.numberOfFavoritePlaces).toEqual(2);
+      });
+      it("Moes favorite places has the ids for New York and Paris", function(){
+        // console.log(moe.favoritePlaces); // for debugging
+        // Must do string comparason; cannot compare ObjectID objects
+        var moesPlaces = moe.favoritePlaces.map(function(place){return place.toString()});
+        expect(moesPlaces).toEqual([ids.newyorkId.toString(), ids.parisId.toString()]);
+      });
+      
+      // step 2 : Moe and Larry unfavorite New York
+      describe("Moe and Larry Unfavorite New York", function(cb){
+        var unfavoriteNewYork = function(cb){
+          Person.removePlace(ids.moeId, ids.newyorkId, function(){
+            Person.removePlace(ids.larryId, ids.newyorkId, function(){
+              cb();
+            });
+          })
+        };
+        beforeEach(function(done){
+          unfavoriteNewYork(function(){
+              Place.getAllFavoritedPlaces(function(err, _favoritePlaces){
+              favoritePlaces = _favoritePlaces;
+              Place.getAllUnfavoritedPlaces(function(err, _unFavoritePlaces){
+                unFavoritePlaces = _unFavoritePlaces;
+                Person.findAllWhoFavoritedPlace(ids.newyorkId, function(err, _peopleWhoLikeNY){
+                  peopleWhoLikeNY = _peopleWhoLikeNY;
+                  Person.findAllWhoFavoritedPlace(ids.londonId, function(err, _peopleWhoLikeLondon){
+                    peopleWhoLikeLondon = _peopleWhoLikeLondon;
+                    Person.getOneByName("Moe", function(err, _moe){
+                      moe = _moe;
+                      done();
+                    });
+                  });
+                });
+              });
+            });
+          })
+        })// end of beforeEach
+        it("Favorite Places Should equal [Paris]", function(){
+        var myFavs = favoritePlaces.map(function(place){return place.name});
+        expect(myFavs).toEqual(["Paris"]);
+        });
+        it("UnFavorite Places Should equal [London New York]", function(){
+          var myUnFavs = unFavoritePlaces.map(function(place){return place.name});
+          expect(myUnFavs).toEqual(["London", "New York"]);
+        });
+        it("People Who Like NY Should equal []", function(){
+          // var iLoveNy = peopleWhoLikeNY.map(function(person){return person.name});
+          expect(peopleWhoLikeNY).toEqual([]);
+        });
+        it("Moes favorite places has the id for Paris", function(){
+        var moesPlaces = moe.favoritePlaces.map(function(place){return place.toString()});
+        expect(moesPlaces).toEqual([ids.parisId.toString()]);
+        });
+        //Step 3-a : Moe tries to Favorite Paris again
+        describe("Moe tries to re-favorite Paris", function() {
+          var message;
+          beforeEach(function(done) {
+            Person.addPlace(ids.moeId, ids.parisId, function(err) {
+              message = err.message;
+              done();
+            });
+          });
+          it("error is thrown", function() {
+            expect(message).toEqual("USER_ALREADY_HAS_PLACE_IN_FAVORITES_LIST");
+          });
+        });// end of Step 3-a
+        //Step 3-b : Moe tries to unfavorite New York Again
+        describe("Moe tries to re-UnFavorite New York", function() {
+          var message;
+          beforeEach(function(done) {
+            Person.removePlace(ids.moeId, ids.newyorkId, function(err) {
+              message = err.message;
+              done();
+            });
+          });
+          it("error is thrown", function() {
+            expect(message).toEqual("USER_DOES_NOT_HAVE_PLACE_IN_FAVORITES_LIST");
+          });
+        });// end of Step 3-b
+      }); // end of Step 2
+    });  //end of Step 1 (add favorites tests)
+    
+    
+    // end of Place tests
     describe("acquire", function() {
       describe("Moe gets two rocks and piece of paper", function() {
         var things;
@@ -192,6 +343,8 @@ describe("models", function() {
     });
 
   }); //end of person tests
+  
+  // Thing Tests
   describe("Thing", function() {
     describe("getOneByName", function() {
       var thing;
@@ -234,5 +387,49 @@ describe("models", function() {
 
     });
   }); //end of Thing
+  
+  // Place Tests
+  describe("Place", function() {
+    describe("getOneByName", function() {
+      var place;
+      beforeEach(function(done) {
+        Place.getOneByName("New York", function(err, _place) {
+          place = _place;
+          done();
+        });
+      });
+
+      it("is New York", function() {
+        expect(place.name).toEqual("New York");
+      });
+    }); //end of getOneByName
+    describe("getOneById", function() {
+      var place;
+      beforeEach(function(done) {
+        Place.getOneById(ids.londonId, function(err, _place) {
+          place = _place;
+          done();
+        });
+      });
+      it("is London", function() {
+        expect(place.name).toEqual("London");
+      });
+    });
+    describe("getAll", function() {
+      var places;
+      beforeEach(function(done) {
+        Place.getAll(function(err, _places) {
+          places = _places.map(function(place) {
+            return place.name;
+          });
+          done();
+        });
+      });
+      it("return [London, New York, Paris]", function() {
+        expect(places).toEqual(["London", "New York", "Paris"]);
+      });
+
+    });
+  }); //end of Place Tests
 
 });
