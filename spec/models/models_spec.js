@@ -1,4 +1,4 @@
-// can use --captureExceptions
+// can use --captureExceptions for debugging
 var models = require("../../models/models");
 var Person = models.Person;
 var Thing = models.Thing;
@@ -48,7 +48,6 @@ describe("models", function() {
       var peopleWhoLikeNY;
       var peopleWhoLikeLondon;
       var moe;
-      // var errMsg;
       
       var addFavoritePlaces = function(cb){
         Person.addPlace(ids.moeId, ids.newyorkId, function(){
@@ -180,16 +179,14 @@ describe("models", function() {
         });// end of Step 3-b
       }); // end of Step 2
     });  //end of Step 1 (add favorites tests)
-    
-    
     // end of Place tests
+    
     describe("acquire", function() {
       describe("Moe gets two rocks and piece of paper", function() {
         var things;
         var rockThing;
         var paperThing;
         var person;
-
         var giveMoeTwoRocksAndAPairOfScissors = function(cb) {
           Person.acquire(ids.moeId, ids.rockId, function() {
             Person.acquire(ids.moeId, ids.rockId, function() {
@@ -199,7 +196,6 @@ describe("models", function() {
             });
           });
         };
-
         var getThingsFromMoe = function(moe) {
           return moe.things.map(
             function(thing) {
@@ -307,12 +303,10 @@ describe("models", function() {
           done();
         });
       });
-
       it("person is moe", function() {
         expect(person.name).toEqual("Moe");
       });
     });
-
     describe("getPersonById", function() {
       var person;
       beforeEach(function(done) {
@@ -339,9 +333,7 @@ describe("models", function() {
       it("return [curly, larry, moe]", function() {
         expect(people).toEqual(["Curly", "Larry", "Moe"]);
       });
-
     });
-
   }); //end of person tests
   
   // Thing Tests
@@ -384,7 +376,6 @@ describe("models", function() {
       it("return [Paper, Rock, Scissors]", function() {
         expect(things).toEqual(["Paper", "Rock", "Scissors"]);
       });
-
     });
   }); //end of Thing
   
@@ -428,8 +419,6 @@ describe("models", function() {
       it("return [London, New York, Paris]", function() {
         expect(places).toEqual(["London", "New York", "Paris"]);
       });
-
     });
   }); //end of Place Tests
-
 });
