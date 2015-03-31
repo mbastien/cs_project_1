@@ -1,11 +1,11 @@
 {
-  "name": "workspace",
+  "name": "ce-9053 Project 1",
   "version": "1.0.0",
   "description": "",
   "main": "hello.js",
   "dependencies": {
-    "jasmine-node": "^1.14.5",
-    "mongoose": "^3.8.24"
+    "jasmine-node": "1.14.5",
+    "mongoose": "3.8.24"
   },
   "devDependencies": {},
   "scripts": {
@@ -15,10 +15,10 @@
     "type": "git",
     "url": "https://github.com/mbastien/cs_week_6.git"
   },
-  "author": "",
+  "author": "Marc Bastien",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/mbastien/cs_week_6/issues"
+    "url": "https://github.com/mbastien/cs_project_1/issues"
   },
-  "homepage": "https://github.com/mbastien/cs_week_6"
+  "homepage": "https://github.com/mbastien/cs_project_1"
 }
